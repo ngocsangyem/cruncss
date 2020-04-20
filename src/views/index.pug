@@ -1,0 +1,12 @@
+extends ./layouts/layout
+
+block var
+	- title = 'Home | Cruncss'
+	- bodyClass = 'home'
+block styles
+	link(rel="stylesheet", href="/static/index.css")
+block main
+	include ./components/navbar/navbar
+	include ./components/form/form
+block scripts
+	script(src="/static/index.js")

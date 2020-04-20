@@ -1,0 +1,30 @@
+//- - var user_agents = require('../../../config/user-agent.js')
+.crawler-tool-form.pt-5
+	.container.crawler-tool-form-container
+		.row
+			.col-md-8.mx-auto
+				h1.text-center.mb-4 Crawler tool
+				form(role="form", class="form-horizontal", method="post", novalidate)
+					.form-group.form-group-urls
+						.form-group-item
+							input#form-url.form-control.form-url(type='url', placeholder="http://example.com/" required  name="url")
+							.invalid-feedback
+					.form-group.control-options
+						.custom-control.custom-toggle
+							input#customToggle1.custom-control-input(type='checkbox', name='customToggle1')
+							label.custom-control-label(for='customToggle1') Show advanced options
+						//- button.btn.btn-success.crawler-form-addMoreUrl(type="button") Add more urls
+						//- button.btn.btn-light.crawler-form-addMoreUrl.not-publish(type="button" disabled) Add more urls
+					.form-group.options-container
+						.form-group-item
+							label User-Agent:
+							select#user-agent.custom-select.w-100
+								each useragent in user_agents
+									option(value=useragent.userAgent)=value=useragent.title
+					.form-group.row
+						.col-md-8
+							button.btn.btn-primary.crawler-form-button.crawler-form-submit-button(type="button" disabled) Let go
+						.col-md-4
+							button.btn.btn-light.crawler-form-button.crawler-form-reset-button(type="button") Reset
+				.url-list
+					
