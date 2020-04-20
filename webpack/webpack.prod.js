@@ -15,7 +15,6 @@ module.exports = {
 		filename: "[name].js",
 	},
 	target: "web",
-	devtool: "#source-map",
 	optimization: {
 		minimizer: [
 			new TerserPlugin({
