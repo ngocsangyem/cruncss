@@ -97,6 +97,10 @@ module.exports = {
 				from: "./src/views/layouts/includes/watermark.pug",
 				to: "views/layouts/includes",
 			},
+			{
+				from: "./package.json",
+				to: "../dist",
+			},
 		]),
 		new MiniCssExtractPlugin({
 			filename: "[name].css",

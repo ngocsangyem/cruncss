@@ -8,19 +8,16 @@ import cheerio from "cheerio";
 
 import { concatFiles } from "../../helpers/concatFiles";
 
+const fs = Promise.promisifyAll(require("fs"));
+
 const purifyCss = async (outputPath, content, css) => {
 	return await purify([content], [css], {
 		output: outputPath,
 	});
 };
 
-const handlePostCss = (directory, destination) => {
-	return fs.readFile(directory, (err, css) => {
-		if (err) {
-			console.log(err);
-
-			return false;
-		}
+const handlePostCss = async (directory, destination) => {
+	return await fs.readFileAsync(directory).then((css) => {
 		postcss([combineMediaQuery, cssnano])
 			.process(css, { from: directory, to: destination })
 			.then((result) => {
@@ -29,17 +26,17 @@ const handlePostCss = (directory, destination) => {
 	});
 };
 
-const modifyHTMLFile = (htmlPath, outputPath, cssPath) => {
-	fs.readFile(htmlPath, { encoding: "utf8" }, function (error, data) {
-		var $ = cheerio.load(data);
-		$('link[rel="stylesheet"]').remove();
-		$("head").append('<link href="' + cssPath + '" rel="stylesheet">');
+const modifyHTMLFile = async (htmlPath, outputPath, cssPath) => {
+	return await fs
+		.readFileAsync(htmlPath, { encoding: "utf8" })
+		.then((data) => {
+			var $ = cheerio.load(data);
+			$('link[rel="stylesheet"]').remove();
+			$("head").append('<link href="' + cssPath + '" rel="stylesheet">');
 
-		fs.writeFile(outputPath, $.html(), () => true);
-	});
+			fs.writeFile(outputPath, $.html(), () => true);
+		});
 };
-
-const fs = Promise.promisifyAll(require("fs"));
 
 class GenerateCssOptimizeFilePlugin {
 	apply(registerAction) {
@@ -74,16 +71,13 @@ class GenerateCssOptimizeFilePlugin {
 			const finalOptimizeFile = cssPath + "/finale.css";
 
 			await concatFiles(cssPath, concatPath);
-			purifyCss(purifyPath, content, concatPath).then(() => {
-				if (fs.existsSync(purifyPath)) {
-					handlePostCss(purifyPath, finalOptimizeFile);
-					modifyHTMLFile(
-						htmlPath,
-						htmlPath,
-						previewPath + "/css/finale.css"
-					);
-				}
-			});
+			await purifyCss(purifyPath, content, concatPath);
+			await handlePostCss(purifyPath, finalOptimizeFile);
+			await modifyHTMLFile(
+				htmlPath,
+				htmlPath,
+				previewPath + "/css/finale.css"
+			);
 		});
 	}
 }
