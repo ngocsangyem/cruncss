@@ -1,5 +1,6 @@
 import "../../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../../../node_modules/shards-ui/dist/css/shards.min.css";
+import "../../../node_modules/izitoast/dist/css/iziToast.min.css";
 import "../styles/index.scss";
 import { navbarInit, toggleNavbar } from "../components/navbar/navbar";
 import * as Form from "../components/form/form";

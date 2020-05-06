@@ -1,41 +1,99 @@
 import path from "path";
 import Promise from "bluebird";
 import purify from "purify-css";
+import PurgeCSS from "purgecss";
 import postcss from "postcss";
 import cssnano from "cssnano";
 import combineMediaQuery from "postcss-combine-media-query";
 import cheerio from "cheerio";
+import extractMediaQuery from "postcss-extract-media-query";
 
 import { concatFiles } from "../../helpers/concatFiles";
 
 const fs = Promise.promisifyAll(require("fs"));
 
-const purifyCss = async (outputPath, content, css) => {
-	return await purify([content], [css], {
+const purifyCss = (outputPath, content, css) => {
+	return purify([content], [css], {
 		output: outputPath,
 	});
 };
 
-const handlePostCss = async (directory, destination) => {
-	return await fs.readFileAsync(directory).then((css) => {
+const purgeCSS = async (outputPath, content, css) => {
+	return await new PurgeCSS()
+		.purge({
+			content: [content],
+			css: [css],
+			whitelist: [
+				"slick-slide",
+				"slick-track",
+				"slick-initialized",
+				"slick-list",
+			],
+		})
+		.then((result) => {
+			fs.writeFile(outputPath, result[0].css, (err) => {
+				if (err) {
+					return console.log(err);
+				}
+
+				console.log("The file was saved!");
+			});
+		});
+};
+
+const postCssExtract = (
+	directory,
+	destination,
+	extractFileName,
+	extractOutput
+) => {
+	fs.readFileAsync(directory).then((css) => {
+		postcss([
+			extractMediaQuery({
+				output: {
+					path: extractOutput, // emit to 'dist' folder in root
+					name: "[name]-[query].[ext]", // pattern of emited files
+				},
+			}),
+		])
+			.process(css, { from: directory, to: destination })
+			.then((result) =>
+				fs.writeFileAsync(extractFileName, result.css, () => true)
+			);
+	});
+};
+
+const handlePostCss = (
+	directory,
+	destination,
+	extractFileName,
+	extractOutput
+) => {
+	return fs.readFileAsync(directory).then((css) => {
 		postcss([combineMediaQuery, cssnano])
 			.process(css, { from: directory, to: destination })
 			.then((result) => {
-				fs.writeFile(destination, result.css, () => true);
+				return fs.writeFileAsync(destination, result.css, () => true);
+			})
+			.then(() => {
+				postCssExtract(
+					destination,
+					destination,
+					extractFileName,
+					extractOutput
+				);
 			});
 	});
 };
 
-const modifyHTMLFile = async (htmlPath, outputPath, cssPath) => {
-	return await fs
-		.readFileAsync(htmlPath, { encoding: "utf8" })
-		.then((data) => {
-			var $ = cheerio.load(data);
-			$('link[rel="stylesheet"]').remove();
-			$("head").append('<link href="' + cssPath + '" rel="stylesheet">');
+const modifyHTMLFile = (htmlPath, outputPath, cssPath) => {
+	return fs.readFileAsync(htmlPath, { encoding: "utf8" }).then((data) => {
+		var $ = cheerio.load(data);
+		$('link[rel="stylesheet"]').remove();
+		$("head").append('<link href="' + cssPath + '" rel="stylesheet">');
 
-			fs.writeFile(outputPath, $.html(), () => true);
-		});
+		fs.writeFile(outputPath, $.html(), () => true);
+	});
 };
 
 class GenerateCssOptimizeFilePlugin {
@@ -68,15 +126,24 @@ class GenerateCssOptimizeFilePlugin {
 			const htmlPath = absoluteDirectoryPath + "/index.html";
 			const concatPath = cssPath + "/concat.css";
 			const purifyPath = cssPath + "/optimize.purify.css";
-			const finalOptimizeFile = cssPath + "/finale.css";
+			const purgeCssPath = cssPath + "/optimize.purge.css";
+			const finalOptimizeFile = cssPath + "/optimize.css";
+			const extractFileName = cssPath + "/optimize.final.css";
+			const extractOutput = cssPath + "/extract";
 
 			await concatFiles(cssPath, concatPath);
-			await purifyCss(purifyPath, content, concatPath);
-			await handlePostCss(purifyPath, finalOptimizeFile);
+			await purgeCSS(purgeCssPath, content, concatPath);
+			// await purifyCss(purifyPath, content, concatPath);
+			await handlePostCss(
+				purgeCssPath,
+				finalOptimizeFile,
+				extractFileName,
+				extractOutput
+			);
 			await modifyHTMLFile(
 				htmlPath,
 				htmlPath,
-				previewPath + "/css/finale.css"
+				previewPath + "/css/optimize.final.css"
 			);
 		});
 	}
