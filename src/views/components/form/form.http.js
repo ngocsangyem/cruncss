@@ -3,7 +3,7 @@ import { urlItem } from "../../../helpers/template/urlItem";
 
 const getData = () => {
 	const urls = Array.from(document.querySelectorAll(".form-url")).map(
-		url => url.value
+		(url) => url.value
 	);
 	const url = document.getElementById("form-url").value;
 	const userAgent = document.getElementById("user-agent").value;
@@ -11,7 +11,7 @@ const getData = () => {
 	return {
 		urls,
 		url,
-		userAgent
+		userAgent,
 	};
 };
 
@@ -23,19 +23,19 @@ const generateItemUrl = (title, previewPath, downloadPath) => {
 	);
 };
 
-const generateListUrl = listUrl => {
-	listUrl.forEach(url => {
+const generateListUrl = (listUrl) => {
+	listUrl.forEach((url) => {
 		generateItemUrl(url.directory, url.previewPath, url.downloadPath);
 	});
 };
 
 const formGet = () => {
 	Axios.get("/sites")
-		.then(response => {
+		.then((response) => {
 			const listUrl = response.data;
 			generateListUrl(listUrl);
 		})
-		.catch(error => {
+		.catch((error) => {
 			// handle error
 			console.log(error.response);
 		});
@@ -48,13 +48,16 @@ const formPost = () => {
 			url: getData().url,
 			request: {
 				headers: {
-					"User-Agent": getData().userAgent
-				}
-			}
+					"User-Agent": getData().userAgent,
+					Cookie:
+						"SSESSb90279c7d30cb67f661fe3e3775243f2=2WilmwOw4xmoArgY9HkxjKaxeGXZAnF5s-Ic0MtFol0;",
+				},
+			},
 		};
 
 		Axios.post("/sites", data)
-			.then(response => {
+			.then((response) => {
+				console.log("formPost -> response", response);
 				const data = response.data;
 				generateItemUrl(
 					data.directory,
@@ -62,7 +65,7 @@ const formPost = () => {
 					data.downloadPath
 				);
 			})
-			.catch(error => {
+			.catch((error) => {
 				console.log(error.response);
 			});
 	});
