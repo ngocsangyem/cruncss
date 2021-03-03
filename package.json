@@ -75,7 +75,7 @@
 		"postcss": "^7.0.27",
 		"postcss-combine-media-query": "^1.0.1",
 		"postcss-exclude-classes": "0.0.3",
-		"pug": "^2.0.4",
+		"pug": "^3.0.1",
 		"purgecss": "^2.1.2",
 		"purify": "^3.4.0",
 		"purify-css": "^1.2.5",
